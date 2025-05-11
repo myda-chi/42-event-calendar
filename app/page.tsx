@@ -4,12 +4,25 @@ import { ArrowRight, Clock, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import HeroSection from "@/components/hero-section"
-import { featuredEvents } from "@/lib/data"
 import EventCard from "@/components/event-card"
+import { prisma } from "@/lib/db"
 
-export default function Home() {
+export default async function Home() {
+  // Fetch events from the database
+  const events = await prisma.event.findMany({
+    where: {
+      isPublished: true,
+    },
+    include: {
+      organizer: true,
+    },
+    orderBy: {
+      startDate: 'asc',
+    },
+  })
+
   // Sort events by date (closest first)
-  const sortedEvents = [...featuredEvents].sort((a, b) => {
+  const sortedEvents = [...events].sort((a, b) => {
     return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
   })
 
@@ -65,19 +78,20 @@ export default function Home() {
       <section className="py-16">
         <div className="container px-4 mx-auto">
           <div className="glass-card p-8 rounded-xl">
-            <h2 className="text-3xl font-bold text-foreground mb-12 text-center">How It Works</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card className="bg-background/20 border-border/20">
                 <CardContent className="pt-6">
                   <div className="rounded-full bg-accent/20 w-12 h-12 flex items-center justify-center mb-4">
                     <span className="text-accent font-bold text-xl">1</span>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground">Find Events</h3>
+                  <h3 className="text-xl font-bold mb-2 text-foreground">Browse Events</h3>
                   <p className="text-muted-foreground">
-                    Browse through our curated list of events or search for specific ones that match your interests.
+                    Explore our calendar to find events that match your interests and schedule.
                   </p>
                 </CardContent>
               </Card>
+
               <Card className="bg-background/20 border-border/20">
                 <CardContent className="pt-6">
                   <div className="rounded-full bg-accent/20 w-12 h-12 flex items-center justify-center mb-4">
@@ -85,10 +99,11 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-foreground">Register</h3>
                   <p className="text-muted-foreground">
-                    Sign up for events with a simple registration process. Secure your spot in just a few clicks.
+                    Sign up for events with a simple click. Get instant confirmation and reminders.
                   </p>
                 </CardContent>
               </Card>
+
               <Card className="bg-background/20 border-border/20">
                 <CardContent className="pt-6">
                   <div className="rounded-full bg-accent/20 w-12 h-12 flex items-center justify-center mb-4">

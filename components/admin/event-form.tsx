@@ -25,22 +25,80 @@ export default function EventForm() {
   const [endDate, setEndDate] = useState<Date>()
   const [isPublished, setIsPublished] = useState(true)
   const [isFeatured, setIsFeatured] = useState(false)
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    content: "",
+    category: "",
+    location: "",
+    startTime: "",
+    endTime: "",
+    capacity: "",
+    price: "",
+    image: "",
+    organizer: {
+      name: "42 Abu Dhabi",
+      image: "/images/42-abu-dhabi-logo.png"
+    }
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          startDate: startDate ? new Date(`${startDate.toISOString().split('T')[0]}T${formData.startTime}`).toISOString() : null,
+          endDate: endDate ? new Date(`${endDate.toISOString().split('T')[0]}T${formData.endTime}`).toISOString() : null,
+          price: parseFloat(formData.price),
+          capacity: parseInt(formData.capacity),
+          isPublished,
+          isFeatured,
+        }),
+      })
 
-    setIsSubmitting(false)
-    toast({
-      title: "Event created",
-      description: "Your event has been successfully created.",
-    })
+      if (!response.ok) {
+        throw new Error('Failed to create event')
+      }
 
-    // Redirect to admin dashboard
-    router.push("/admin")
+      toast({
+        title: "Event created",
+        description: "Your event has been successfully created.",
+      })
+
+      router.push("/admin")
+      router.refresh()
+    } catch (error) {
+      console.error('Error creating event:', error)
+      toast({
+        title: "Error",
+        description: "Failed to create event. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
   return (
@@ -51,7 +109,15 @@ export default function EventForm() {
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Event Title</Label>
-                <Input id="title" placeholder="Enter event title" required className="bg-background/40" />
+                <Input 
+                  id="title" 
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="Enter event title" 
+                  required 
+                  className="bg-background/40" 
+                />
               </div>
             </div>
 
@@ -60,6 +126,9 @@ export default function EventForm() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
                   placeholder="Enter event description"
                   required
                   className="min-h-32 bg-background/40"
@@ -70,7 +139,11 @@ export default function EventForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select required>
+                <Select 
+                  required 
+                  value={formData.category}
+                  onValueChange={(value) => handleSelectChange('category', value)}
+                >
                   <SelectTrigger id="category" className="bg-background/40">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -91,7 +164,15 @@ export default function EventForm() {
                 <Label htmlFor="location">Location</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="location" placeholder="Enter event location" required className="pl-10 bg-background/40" />
+                  <Input 
+                    id="location" 
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="Enter event location" 
+                    required 
+                    className="pl-10 bg-background/40" 
+                  />
                 </div>
               </div>
             </div>
@@ -119,7 +200,13 @@ export default function EventForm() {
                   </Popover>
                   <div className="relative flex-1">
                     <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input type="time" className="pl-10 bg-background/40" />
+                    <Input 
+                      type="time" 
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={handleInputChange}
+                      className="pl-10 bg-background/40" 
+                    />
                   </div>
                 </div>
               </div>
@@ -146,7 +233,13 @@ export default function EventForm() {
                   </Popover>
                   <div className="relative flex-1">
                     <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input type="time" className="pl-10 bg-background/40" />
+                    <Input 
+                      type="time" 
+                      name="endTime"
+                      value={formData.endTime}
+                      onChange={handleInputChange}
+                      className="pl-10 bg-background/40" 
+                    />
                   </div>
                 </div>
               </div>
@@ -159,6 +252,9 @@ export default function EventForm() {
                   <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="capacity"
+                    name="capacity"
+                    value={formData.capacity}
+                    onChange={handleInputChange}
                     type="number"
                     placeholder="Max attendees"
                     min="1"
@@ -174,6 +270,9 @@ export default function EventForm() {
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="price"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
                     type="number"
                     placeholder="0 for free"
                     min="0"
@@ -188,7 +287,14 @@ export default function EventForm() {
                 <Label htmlFor="image">Image URL</Label>
                 <div className="relative">
                   <ImageIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="image" placeholder="Image URL" className="pl-10 bg-background/40" />
+                  <Input 
+                    id="image" 
+                    name="image"
+                    value={formData.image}
+                    onChange={handleInputChange}
+                    placeholder="Image URL" 
+                    className="pl-10 bg-background/40" 
+                  />
                 </div>
               </div>
             </div>

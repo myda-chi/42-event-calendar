@@ -2,24 +2,26 @@ export interface Event {
   id: string
   title: string
   description: string
-  content?: string
-  image?: string
+  content: string | null
+  image: string | null
   category: string
   location: string
   startDate: string
-  endDate?: string
+  endDate: string | null
   price: number
   capacity: number
   attendees: number
   organizer: {
     id: string
     name: string
-    image?: string
+    image: string | null
+    createdAt: Date
+    updatedAt: Date
   }
   isFeatured: boolean
   isPublished: boolean
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface Product {
